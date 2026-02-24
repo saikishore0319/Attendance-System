@@ -1,0 +1,4 @@
+The React frontend uploads a webcam photo to an S3 bucket.
+That upload wakes up your Python Lambda function.
+Python sends the photo to Amazon Rekognition to say, "Who is this?"
+If there is a match, Python writes the Employee ID and the current timestamp to DynamoDB
