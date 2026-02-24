@@ -14,7 +14,6 @@ def lambda_handler(event, context):
         result = table.scan()
         items = result.get('Items', [])
         return {
-            'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json'
@@ -24,6 +23,5 @@ def lambda_handler(event, context):
     except Exception as err:
         print(f"Error: {str(err)}")
         return {
-            'statusCode': 500,
             'body': json.dumps({'message': 'Failed to fetch logs', 'error': str(err)})
         }
