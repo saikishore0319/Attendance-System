@@ -41,9 +41,8 @@ function App() {
       })
         .then(async (res) => {
           const text = await res.text();
-          console.log("Status:", res.status);
-          console.log("Response:", text);
-
+          // console.log("Status:", res.status);
+          // console.log("Response:", text);
           if (!res.ok) throw new Error(text);
           return JSON.parse(text);
         })
