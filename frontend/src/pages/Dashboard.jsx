@@ -1,20 +1,32 @@
 import { useEffect, useState } from "react";
 import { getSummary } from "../services/api";
+import { getToken } from "../services/auth";
 
 function Dashboard() {
   const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock data
-    setSummary({
-      today: "Present",
-      weeklyPresent: 4,
-      weeklyAbsent: 1,
-      percentage: 80,
-    });
+    const token = getToken();
+    
+    getSummary(token)
+      .then((data) => {
+        setSummary(data);
+        console.log(data);
+        
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+
   }, []);
 
-  if (!summary) return <div>Loading...</div>;
+  if (loading) return <div>Loading dashboard...</div>;
+
+  if (!summary) return <div>No attendance data</div>;
 
   return (
     <div className="min-h-screen bg-gray-100 p-10">
@@ -27,7 +39,7 @@ function Dashboard() {
         </div>
 
         <div className="bg-white p-6 rounded shadow">
-          <h3 className="font-semibold">Weekly</h3>
+          <h3 className="font-semibold">Last 7 Days</h3>
           <p>Present: {summary.weeklyPresent}</p>
           <p>Absent: {summary.weeklyAbsent}</p>
         </div>

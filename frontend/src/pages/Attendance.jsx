@@ -1,12 +1,32 @@
 import { useState } from "react";
 import WebcamCapture from "../components/WebcamCapture";
+import { markAttendance } from "../services/api";
+import { getToken } from "../services/auth";
 
 function Attendance() {
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = () => {
-    if (!image) return;
-    alert("Attendance Submitted (Mock)");
+  const handleSubmit = async () => {
+    if (!image) {
+      alert("Capture image first");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = getToken();
+
+      const response = await markAttendance(image, token);
+
+      setMessage(response.message);
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -20,10 +40,17 @@ function Attendance() {
 
         <button
           onClick={handleSubmit}
+          disabled={loading}
           className="mt-6 w-full bg-blue-600 text-white py-2 rounded"
         >
-          Submit Attendance
+          {loading ? "Processing..." : "Submit Attendance"}
         </button>
+
+        {message && (
+          <p className="mt-4 text-center font-semibold">
+            {message}
+          </p>
+        )}
       </div>
     </div>
   );
