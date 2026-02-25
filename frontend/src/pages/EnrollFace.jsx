@@ -1,15 +1,34 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import WebcamCapture from "../components/WebcamCapture";
+import { enrollFace } from "../services/api";
 
 function EnrollFace() {
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleEnroll = () => {
-    if (!image) return;
-    localStorage.setItem("faceEnrolled", "true");
-    navigate("/dashboard");
+  const handleEnroll = async () => {
+    if (!image) {
+      alert("Capture image first");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+
+      await enrollFace(image, token);
+
+      alert("Enrollment successful");
+      localStorage.setItem("faceEnrolled", "true");
+      navigate("/dashboard");
+    } catch (err) {
+      console.log(err);
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -23,9 +42,10 @@ function EnrollFace() {
 
         <button
           onClick={handleEnroll}
+          disabled={loading}
           className="mt-6 w-full bg-green-600 text-white py-2 rounded"
         >
-          Enroll
+          {loading ? "Enrolling..." : "Enroll"}
         </button>
       </div>
     </div>

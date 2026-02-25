@@ -1,31 +1,27 @@
 import { useEffect, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import EnrollFace from "./pages/EnrollFace";
 import Dashboard from "./pages/Dashboard";
 import Attendance from "./pages/Attendance";
 import { cognitoConfig } from "./services/cognitoConfig";
-import { isAuthenticated, isFaceEnrolled, login } from "./services/auth";
-import { useNavigate } from "react-router-dom";
+import { isAuthenticated, login } from "./services/auth";
+import { getProfile } from "./services/api";
 
 function App() {
   const [authenticated, setAuthenticated] = useState(isAuthenticated());
-  const [enrolled, setEnrolled] = useState(isFaceEnrolled());
+  const [checkingProfile, setCheckingProfile] = useState(false);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
+  // Handle Cognito redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-    // console.log("hrl");
 
     if (code) {
       setLoading(true);
-      // console.log("hello");
-
-      console.log(code);
-
 
       fetch(`${cognitoConfig.domain}/oauth2/token`, {
         method: "POST",
@@ -35,14 +31,12 @@ function App() {
         body: new URLSearchParams({
           grant_type: "authorization_code",
           client_id: cognitoConfig.clientId,
-          code: code,
+          code,
           redirect_uri: cognitoConfig.redirectUri,
         }),
       })
         .then(async (res) => {
           const text = await res.text();
-          // console.log("Status:", res.status);
-          // console.log("Response:", text);
           if (!res.ok) throw new Error(text);
           return JSON.parse(text);
         })
@@ -56,24 +50,46 @@ function App() {
           console.error("Auth error:", err);
         })
         .finally(() => setLoading(false));
-      // navigate("/dashboard", { replace: true });
     }
   }, []);
 
+  // After authentication → check profile
   useEffect(() => {
-    if (authenticated) {
-      navigate("/dashboard", { replace: true });
-    }
+    if (!authenticated) return;
+
+    setCheckingProfile(true);
+
+    const token = localStorage.getItem("token");
+
+    getProfile(token)
+      .then(() => {
+        // user exists → go to dashboard
+        navigate("/dashboard", { replace: true });
+      })
+      .catch((err) => {
+        // if profile not found → enroll
+        if (err.message.includes("User not enrolled")) {
+          navigate("/enroll", { replace: true });
+        } else {
+          console.error(err);
+        }
+      })
+      .finally(() => {
+        setCheckingProfile(false);
+      });
+
   }, [authenticated]);
 
-  if (loading) return <div>Authenticating...</div>;
+  if (loading || checkingProfile) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
       <Navbar />
 
       <Routes>
-        {/* Public */}
+        {/* Root */}
         <Route
           path="/"
           element={
@@ -81,27 +97,27 @@ function App() {
           }
         />
 
-        {/* Not authenticated */}
-        {!authenticated && (
-          <>
-            <Route path="/dashboard" element={<Navigate to="/" />} />
-            <Route path="/attendance" element={<Navigate to="/" />} />
-            <Route path="/enroll" element={<Navigate to="/" />} />
-          </>
-        )}
+        {/* Protected Routes */}
+        <Route
+          path="/enroll"
+          element={
+            authenticated ? <EnrollFace /> : <Navigate to="/" />
+          }
+        />
 
-        {/* Authenticated but not enrolled */}
-        {authenticated && !enrolled && (
-          <>
-            <Route path="/dashboard" element={<Navigate to="/enroll" />} />
-            <Route path="/attendance" element={<Navigate to="/enroll" />} />
-          </>
-        )}
+        <Route
+          path="/dashboard"
+          element={
+            authenticated ? <Dashboard /> : <Navigate to="/" />
+          }
+        />
 
-        {/* Protected */}
-        <Route path="/enroll" element={<EnrollFace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/attendance" element={<Attendance />} />
+        <Route
+          path="/attendance"
+          element={
+            authenticated ? <Attendance /> : <Navigate to="/" />
+          }
+        />
       </Routes>
     </>
   );
