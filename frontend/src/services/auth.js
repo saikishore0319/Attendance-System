@@ -4,8 +4,8 @@ export function isAuthenticated() {
   return !!localStorage.getItem("token");
 }
 
-export function isFaceEnrolled() {
-  return localStorage.getItem("faceEnrolled") === "true";
+export function getToken() {
+  return localStorage.getItem("token");
 }
 
 export function login(token) {
@@ -13,7 +13,7 @@ export function login(token) {
 }
 
 export function logout() {
-  localStorage.clear();
+  localStorage.removeItem("token");
 
   const logoutUrl =
     `${cognitoConfig.domain}/logout` +
