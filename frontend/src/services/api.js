@@ -1,4 +1,4 @@
-const BASE_URL = "https://2zz6sbixv9.execute-api.ap-south-1.amazonaws.com"; 
+export const BASE_URL = "https://2zz6sbixv9.execute-api.ap-south-1.amazonaws.com"; 
 // Example:
 // https://abcd123.execute-api.ap-south-1.amazonaws.com
 
@@ -46,3 +46,4 @@ export async function markAttendance(image, token) {
 export async function getSummary(token) {
   return request("/attendance/summary", "GET", null, token);
 }
+
