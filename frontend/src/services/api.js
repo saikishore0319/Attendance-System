@@ -1,4 +1,4 @@
-export const BASE_URL = "https://2zz6sbixv9.execute-api.ap-south-1.amazonaws.com"; 
+export const BASE_URL = "https://2zz6sbixv9.execute-api.ap-south-1.amazonaws.com/Prod"; 
 // Example:
 // https://abcd123.execute-api.ap-south-1.amazonaws.com
 
